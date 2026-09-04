@@ -671,54 +671,23 @@ function SeccionAjusteHoras({ practicantes }) {
                           </div>
                         </div>
                         <div>
-                          <label className="form-label text-xs">
-                            Total horas
-                            <span className="ml-1 text-slate-600">(auto-calculado o manual)</span>
-                          </label>
-                          {/* Dos campos separados para evitar confusión decimal */}
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1">
-                              <input
-                                type="number"
-                                min="0"
-                                max="23"
-                                step="1"
-                                value={Math.floor(parseFloat(form.total_dia_horas) || 0)}
-                                onChange={(e) => {
-                                  const h = Math.max(0, parseInt(e.target.value) || 0)
-                                  const m = Math.round(((parseFloat(form.total_dia_horas) || 0) % 1) * 60)
-                                  setForm({ ...form, total_dia_horas: (h + m / 60).toFixed(4) })
-                                }}
-                                className="form-input py-2 text-sm text-center"
-                                placeholder="0"
-                              />
-                              <p className="text-center text-[10px] text-slate-500 mt-0.5">horas</p>
-                            </div>
-                            <span className="text-slate-500 font-bold text-lg mb-4">:</span>
-                            <div className="flex-1">
-                              <input
-                                type="number"
-                                min="0"
-                                max="59"
-                                step="1"
-                                value={Math.round(((parseFloat(form.total_dia_horas) || 0) % 1) * 60)}
-                                onChange={(e) => {
-                                  const h = Math.floor(parseFloat(form.total_dia_horas) || 0)
-                                  const m = Math.min(59, Math.max(0, parseInt(e.target.value) || 0))
-                                  setForm({ ...form, total_dia_horas: (h + m / 60).toFixed(4) })
-                                }}
-                                className="form-input py-2 text-sm text-center"
-                                placeholder="0"
-                              />
-                              <p className="text-center text-[10px] text-slate-500 mt-0.5">minutos</p>
-                            </div>
+                          <label className="form-label text-xs">Total horas</label>
+                          {/* Solo lectura — se calcula automáticamente desde entrada/salida */}
+                          <div className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border
+                            ${parseFloat(form.total_dia_horas) > 0
+                              ? 'bg-emerald-500/10 border-emerald-500/30'
+                              : 'bg-slate-900/50 border-slate-700/40'
+                            }`}>
+                            <svg className="h-4 w-4 text-emerald-400 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                            <span className={`text-lg font-bold tabular-nums ${parseFloat(form.total_dia_horas) > 0 ? 'text-emerald-400' : 'text-slate-600'}`}>
+                              {parseFloat(form.total_dia_horas) > 0 ? formatHoras(parseFloat(form.total_dia_horas)) : '–'}
+                            </span>
+                            <span className="text-xs text-slate-500">
+                              {parseFloat(form.total_dia_horas) > 0 ? 'calculado automáticamente' : 'ingresa entrada y salida'}
+                            </span>
                           </div>
-                          {/* Preview del total */}
-                          {parseFloat(form.total_dia_horas) > 0 && (
-                            <p className="text-xs text-emerald-400 mt-1 text-center font-medium">
-                              = {formatHoras(parseFloat(form.total_dia_horas))}
-                            </p>
-                          )}
                         </div>
                         <div>
                           <label className="form-label text-xs">
