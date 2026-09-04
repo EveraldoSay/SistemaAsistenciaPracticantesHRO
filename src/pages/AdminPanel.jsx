@@ -502,10 +502,7 @@ function SeccionAjusteHoras({ practicantes }) {
       const horas = parseFloat(form.total_dia_horas) || 0
       const completo = !!(entrada && salida)
 
-      // Diferencia de horas respecto al valor anterior
-      const horasAntes = editReg.total_dia_horas || 0
-      const diferencia = horas - horasAntes
-
+      // 1. Guardar el registro ajustado
       await updateDoc(doc(registrosRef, editReg.id), {
         hora_entrada: entrada,
         hora_salida: salida,
@@ -515,15 +512,20 @@ function SeccionAjusteHoras({ practicantes }) {
         modificado_por_admin: true,
       })
 
-      // Actualizar total acumulado del practicante
-      if (diferencia !== 0) {
-        const pRef = doc(practicantesRef, editReg.id_practicante)
-        const pracSnap = practicantes.find((p) => p.id === editReg.id_practicante)
-        if (pracSnap) {
-          const nuevo = Math.max(0, (pracSnap.total_horas_acumuladas || 0) + diferencia)
-          await updateDoc(pRef, { total_horas_acumuladas: nuevo })
-        }
-      }
+      // 2. Recalcular total acumulado sumando TODOS los registros del practicante
+      //    (más robusto que usar diferencias — siempre da el valor exacto)
+      const qTodos = query(registrosRef, where('id_practicante', '==', editReg.id_practicante))
+      const snapTodos = await getDocs(qTodos)
+      const totalReal = snapTodos.docs.reduce((acc, d) => {
+        const data = d.data()
+        // Usar el valor recién guardado para el registro editado
+        if (d.id === editReg.id) return acc + (horas || 0)
+        return acc + (data.total_dia_horas || 0)
+      }, 0)
+
+      await updateDoc(doc(practicantesRef, editReg.id_practicante), {
+        total_horas_acumuladas: Math.max(0, totalReal),
+      })
 
       setEditReg(null)
       mostrarMsg('✅ Registro ajustado correctamente')
