@@ -675,16 +675,50 @@ function SeccionAjusteHoras({ practicantes }) {
                             Total horas
                             <span className="ml-1 text-slate-600">(auto-calculado o manual)</span>
                           </label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            max="24"
-                            value={form.total_dia_horas}
-                            onChange={(e) => setForm({ ...form, total_dia_horas: e.target.value })}
-                            className="form-input py-2 text-sm"
-                            placeholder="ej. 4.5"
-                          />
+                          {/* Dos campos separados para evitar confusión decimal */}
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1">
+                              <input
+                                type="number"
+                                min="0"
+                                max="23"
+                                step="1"
+                                value={Math.floor(parseFloat(form.total_dia_horas) || 0)}
+                                onChange={(e) => {
+                                  const h = Math.max(0, parseInt(e.target.value) || 0)
+                                  const m = Math.round(((parseFloat(form.total_dia_horas) || 0) % 1) * 60)
+                                  setForm({ ...form, total_dia_horas: (h + m / 60).toFixed(4) })
+                                }}
+                                className="form-input py-2 text-sm text-center"
+                                placeholder="0"
+                              />
+                              <p className="text-center text-[10px] text-slate-500 mt-0.5">horas</p>
+                            </div>
+                            <span className="text-slate-500 font-bold text-lg mb-4">:</span>
+                            <div className="flex-1">
+                              <input
+                                type="number"
+                                min="0"
+                                max="59"
+                                step="1"
+                                value={Math.round(((parseFloat(form.total_dia_horas) || 0) % 1) * 60)}
+                                onChange={(e) => {
+                                  const h = Math.floor(parseFloat(form.total_dia_horas) || 0)
+                                  const m = Math.min(59, Math.max(0, parseInt(e.target.value) || 0))
+                                  setForm({ ...form, total_dia_horas: (h + m / 60).toFixed(4) })
+                                }}
+                                className="form-input py-2 text-sm text-center"
+                                placeholder="0"
+                              />
+                              <p className="text-center text-[10px] text-slate-500 mt-0.5">minutos</p>
+                            </div>
+                          </div>
+                          {/* Preview del total */}
+                          {parseFloat(form.total_dia_horas) > 0 && (
+                            <p className="text-xs text-emerald-400 mt-1 text-center font-medium">
+                              = {formatHoras(parseFloat(form.total_dia_horas))}
+                            </p>
+                          )}
                         </div>
                         <div>
                           <label className="form-label text-xs">
