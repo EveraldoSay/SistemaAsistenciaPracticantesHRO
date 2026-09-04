@@ -447,11 +447,14 @@ function SeccionAjusteHoras({ practicantes }) {
 
   const mostrarMsg = (t) => { setMsg(t); setTimeout(() => setMsg(null), 3000) }
 
-  // Suscribir a todos los registros incompletos
+  // Suscribir a todos los registros — ordenar en memoria para evitar índices extra
   useEffect(() => {
-    const q = query(registrosRef, orderBy('fecha', 'desc'))
+    const q = query(registrosRef)
     const unsub = onSnapshot(q, (snap) => {
-      setTodos(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      const lista = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (a.fecha > b.fecha ? -1 : 1))
+      setTodos(lista)
     })
     return () => unsub()
   }, [])
@@ -760,11 +763,13 @@ function SeccionReportes({ practicantes }) {
       // Cargar todos los registros del practicante
       const q = query(
         registrosRef,
-        where('id_practicante', '==', practicante.id),
-        orderBy('fecha', 'asc')
+        where('id_practicante', '==', practicante.id)
       )
       const snap = await getDocs(q)
-      const registros = snap.docs.map((d) => d.data())
+      // Ordenar en memoria — evita necesitar índice compuesto adicional
+      const registros = snap.docs
+        .map((d) => d.data())
+        .sort((a, b) => (a.fecha > b.fecha ? 1 : -1))
 
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
