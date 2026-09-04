@@ -1,0 +1,49 @@
+# ─── GitLab CI/CD — Deploy a GitLab Pages ────────────────────────────────
+# Documentación: https://docs.gitlab.com/ee/user/project/pages/
+
+image: node:20-alpine
+
+# Caché de node_modules entre pipelines para acelerar builds
+cache:
+  key:
+    files:
+      - package.json
+  paths:
+    - node_modules/
+
+stages:
+  - build
+  - deploy
+
+# ── Etapa de construcción ────────────────────────────────────────────────
+build:
+  stage: build
+  script:
+    - npm ci --prefer-offline
+    - npm run build
+  artifacts:
+    # La carpeta dist se pasa a la etapa de deploy
+    paths:
+      - dist/
+    expire_in: 1 hour
+  # Solo construye en la rama principal
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ── Etapa de despliegue a Pages ──────────────────────────────────────────
+pages:
+  stage: deploy
+  # Toma los artefactos del build anterior
+  dependencies:
+    - build
+  script:
+    # GitLab Pages requiere que el contenido esté en ./public
+    - mv dist public
+  artifacts:
+    paths:
+      - public
+  # Solo despliega desde la rama principal (main o master)
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  environment:
+    name: production
