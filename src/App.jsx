@@ -11,6 +11,8 @@ export const RUTA_ADMIN = '/gestion-7007'
 function Navbar() {
   const location = useLocation()
   const esAdmin = location.pathname === RUTA_ADMIN
+  // Mostrar botón Admin solo si ya ingresó el PIN en esta sesión del navegador
+  const estaAutenticado = sessionStorage.getItem('admin_auth') === '1'
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md">
@@ -33,9 +35,8 @@ function Navbar() {
             </div>
           </Link>
 
-          {/* Nav: solo muestra "Kiosco" públicamente.
-              El botón "Admin" aparece únicamente cuando ya estás en la ruta secreta. */}
           <nav className="flex items-center gap-2">
+            {/* Kiosco — siempre visible */}
             <Link
               to="/"
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -47,11 +48,18 @@ function Navbar() {
               Kiosco
             </Link>
 
-            {/* Solo visible cuando ya estás en el panel admin */}
-            {esAdmin && (
-              <span className="px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-700 text-slate-200 border border-slate-600/50">
+            {/* Admin — visible solo si ya autenticó con PIN en esta sesión */}
+            {estaAutenticado && (
+              <Link
+                to={RUTA_ADMIN}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  esAdmin
+                    ? 'bg-slate-700 text-slate-200 border border-slate-600/50'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                }`}
+              >
                 Admin
-              </span>
+              </Link>
             )}
           </nav>
         </div>
