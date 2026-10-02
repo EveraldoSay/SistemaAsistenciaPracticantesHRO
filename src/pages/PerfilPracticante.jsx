@@ -14,6 +14,7 @@ import {
   orderBy,
   onSnapshot,
 } from '../firebase'
+import Avatar from '../components/Avatar'
 
 // ─── Utilidades de fecha / hora ────────────────────────────────────────────
 function getFechaHoy() {
@@ -412,6 +413,11 @@ export default function PerfilPracticante() {
       <div className="card p-6 mb-4">
         <RelojEnVivo />
         <div className="mt-5 text-center border-t border-slate-700/50 pt-5">
+          <div className="flex justify-center mb-3">
+            <div className="animate-float">
+              <Avatar id={practicante.id} size="xl" />
+            </div>
+          </div>
           <h1 className="text-xl font-bold text-slate-100">
             {practicante.nombre_completo}
           </h1>
