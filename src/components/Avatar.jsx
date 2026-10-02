@@ -414,9 +414,15 @@ const PERSONAJES = [
   },
 ]
 
-// ─── Función para asignar personaje por ID ─────────────────────────────────
+// ─── Función para asignar personaje por ÍNDICE (sin duplicados) ────────────
+// El índice viene de la posición del practicante en la lista ordenada.
+// Los primeros 12 tienen personaje único. A partir del 13 se reutilizan.
+function getPersonajePorIndice(indice) {
+  return PERSONAJES[indice % PERSONAJES.length]
+}
+
+// Mantener el hash como fallback si no se pasa índice
 function getPersonaje(id) {
-  // Hash simple del string ID → índice estable
   let hash = 0
   for (let i = 0; i < id.length; i++) {
     hash = (hash * 31 + id.charCodeAt(i)) & 0xffffffff
@@ -427,12 +433,13 @@ function getPersonaje(id) {
 // ─── Componente Avatar ─────────────────────────────────────────────────────
 /**
  * Props:
- *  - id: string — ID del practicante (determina el personaje)
- *  - size: 'sm' | 'md' | 'lg' | 'xl'  (default: 'md')
- *  - className: string extra
+ *  - id: string       — ID del practicante (fallback si no hay índice)
+ *  - index: number    — posición en la lista (preferido, evita duplicados)
+ *  - size: 'sm' | 'md' | 'lg' | 'xl'
+ *  - className: string
  */
-export default function Avatar({ id = '', size = 'md', className = '' }) {
-  const personaje = getPersonaje(id)
+export default function Avatar({ id = '', index = null, size = 'md', className = '' }) {
+  const personaje = index !== null ? getPersonajePorIndice(index) : getPersonaje(id)
 
   const sizes = {
     sm:  'h-10 w-10 rounded-xl',

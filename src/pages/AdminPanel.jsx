@@ -765,10 +765,12 @@ function agruparPorSemana(registros) {
   registros.forEach((r) => {
     const num = getNumSemana(r.fecha)
     const año = r.fecha.slice(0, 4)
-    const clave = `${año}-S${num}`
-    if (!semanas[clave]) semanas[clave] = { clave, registros: [], totalHoras: 0 }
+    const clave = `${año}-S${String(num).padStart(2,'0')}`
+    if (!semanas[clave]) semanas[clave] = { clave, registros: [], totalHoras: 0, fechaMin: r.fecha, fechaMax: r.fecha }
     semanas[clave].registros.push(r)
     semanas[clave].totalHoras += r.total_dia_horas || 0
+    if (r.fecha < semanas[clave].fechaMin) semanas[clave].fechaMin = r.fecha
+    if (r.fecha > semanas[clave].fechaMax) semanas[clave].fechaMax = r.fecha
   })
   return Object.values(semanas).sort((a, b) => a.clave > b.clave ? 1 : -1)
 }
@@ -835,13 +837,17 @@ function SeccionReportes({ practicantes }) {
 
       autoTable(pdf, {
         startY: 47,
-        head: [['Semana', 'Días trabajados', 'Horas semanales', 'Acumulado hasta semana']],
+        head: [['Semana', 'Rango', 'Días', 'Horas', 'Acumulado']],
         body: semanas.map((s, i) => {
           const acum = semanas.slice(0, i + 1).reduce((a, x) => a + x.totalHoras, 0)
           const diasCompletos = s.registros.filter(r => r.estado === 'COMPLETO').length
+          const rango = s.fechaMin === s.fechaMax
+            ? formatFecha(s.fechaMin)
+            : `${formatFecha(s.fechaMin)} – ${formatFecha(s.fechaMax)}`
           return [
             s.clave.replace('-S', ' · Semana '),
-            `${diasCompletos} día${diasCompletos !== 1 ? 's' : ''}`,
+            rango,
+            `${diasCompletos}d`,
             formatHoras(s.totalHoras),
             formatHoras(acum),
           ]
@@ -862,10 +868,11 @@ function SeccionReportes({ practicantes }) {
         },
         alternateRowStyles: { fillColor: [250, 250, 250] },
         columnStyles: {
-          0: { cellWidth: 45 },
-          1: { cellWidth: 35, halign: 'center' },
-          2: { cellWidth: 35, halign: 'center', fontStyle: 'bold' },
-          3: { cellWidth: 45, halign: 'right' },
+          0: { cellWidth: 35 },
+          1: { cellWidth: 50 },
+          2: { cellWidth: 15, halign: 'center' },
+          3: { cellWidth: 30, halign: 'center', fontStyle: 'bold' },
+          4: { cellWidth: 35, halign: 'right' },
         },
         margin: { left: 14, right: 14 },
       })
@@ -1002,9 +1009,10 @@ function SeccionReportes({ practicantes }) {
                     <thead>
                       <tr className="bg-slate-800/80">
                         <th className="text-left px-3 py-2 text-slate-400 font-semibold">Semana</th>
+                        <th className="text-left px-3 py-2 text-slate-400 font-semibold">Rango</th>
                         <th className="text-center px-3 py-2 text-slate-400 font-semibold">Días</th>
                         <th className="text-right px-3 py-2 text-emerald-400 font-semibold">Horas</th>
-                        <th className="text-right px-3 py-2 text-slate-400 font-semibold">Acumulado</th>
+                        <th className="text-right px-3 py-2 text-slate-400 font-semibold">Acum.</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1013,7 +1021,10 @@ function SeccionReportes({ practicantes }) {
                         const dias = s.registros.filter(r => r.estado === 'COMPLETO').length
                         return (
                           <tr key={s.clave} className={i % 2 === 0 ? 'bg-slate-900/30' : 'bg-slate-800/20'}>
-                            <td className="px-3 py-2 text-slate-300">{s.clave.replace('-S', ' · Sem ')}</td>
+                            <td className="px-3 py-2 text-slate-300 font-medium">{s.clave.replace('-S', ' · Sem ')}</td>
+                            <td className="px-3 py-2 text-slate-500 text-[11px]">
+                              {formatFecha(s.fechaMin)}{s.fechaMin !== s.fechaMax ? ` → ${formatFecha(s.fechaMax)}` : ''}
+                            </td>
                             <td className="px-3 py-2 text-center text-slate-400">{dias}d</td>
                             <td className="px-3 py-2 text-right font-bold text-emerald-400">{formatHoras(s.totalHoras)}</td>
                             <td className="px-3 py-2 text-right text-slate-400">{formatHoras(acum)}</td>
