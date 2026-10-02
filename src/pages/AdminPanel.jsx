@@ -753,102 +753,181 @@ function SeccionAjusteHoras({ practicantes }) {
   )
 }
 
+// ─── Utilidad: agrupar registros por semana ────────────────────────────────
+function getNumSemana(fechaStr) {
+  const fecha = new Date(fechaStr + 'T00:00:00')
+  const inicio = new Date(fecha.getFullYear(), 0, 1)
+  return Math.ceil(((fecha - inicio) / 86400000 + inicio.getDay() + 1) / 7)
+}
+
+function agruparPorSemana(registros) {
+  const semanas = {}
+  registros.forEach((r) => {
+    const num = getNumSemana(r.fecha)
+    const año = r.fecha.slice(0, 4)
+    const clave = `${año}-S${num}`
+    if (!semanas[clave]) semanas[clave] = { clave, registros: [], totalHoras: 0 }
+    semanas[clave].registros.push(r)
+    semanas[clave].totalHoras += r.total_dia_horas || 0
+  })
+  return Object.values(semanas).sort((a, b) => a.clave > b.clave ? 1 : -1)
+}
+
 // ─── Sección de reportes PDF ────────────────────────────────────────────────
 function SeccionReportes({ practicantes }) {
   const [generando, setGenerando] = useState(null)
+  const [vistaSemanaPract, setVistaSemanaPract] = useState(null) // id practicante
+  const [registrosSemana, setRegistrosSemana] = useState([])
+  const [cargandoSemana, setCargandoSemana] = useState(false)
+
+  const verSemanas = async (p) => {
+    if (vistaSemanaPract === p.id) { setVistaSemanaPract(null); return }
+    setCargandoSemana(true)
+    setVistaSemanaPract(p.id)
+    const q = query(registrosRef, where('id_practicante', '==', p.id))
+    const snap = await getDocs(q)
+    const regs = snap.docs.map((d) => d.data()).sort((a, b) => a.fecha > b.fecha ? 1 : -1)
+    setRegistrosSemana(regs)
+    setCargandoSemana(false)
+  }
 
   const generarPDF = async (practicante) => {
     setGenerando(practicante.id)
     try {
-      // Cargar todos los registros del practicante
-      const q = query(
-        registrosRef,
-        where('id_practicante', '==', practicante.id)
-      )
+      const q = query(registrosRef, where('id_practicante', '==', practicante.id))
       const snap = await getDocs(q)
-      // Ordenar en memoria — evita necesitar índice compuesto adicional
       const registros = snap.docs
         .map((d) => d.data())
         .sort((a, b) => (a.fecha > b.fecha ? 1 : -1))
 
+      const semanas = agruparPorSemana(registros)
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
-      // ── Cabecera ──
-      pdf.setFillColor(15, 23, 42)       // slate-950
-      pdf.rect(0, 0, 210, 45, 'F')
+      // ── Cabecera minimalista (sin fondos oscuros) ──
+      pdf.setDrawColor(16, 185, 129)   // línea emerald
+      pdf.setLineWidth(0.8)
+      pdf.line(14, 20, 196, 20)
 
-      pdf.setTextColor(16, 185, 129)     // emerald-500
-      pdf.setFontSize(18)
+      pdf.setTextColor(30, 30, 30)
+      pdf.setFontSize(16)
       pdf.setFont('helvetica', 'bold')
-      pdf.text('Reporte de Horas', 14, 18)
+      pdf.text('Reporte de Horas', 14, 14)
 
-      pdf.setTextColor(226, 232, 240)    // slate-200
-      pdf.setFontSize(12)
+      pdf.setFontSize(10)
       pdf.setFont('helvetica', 'normal')
-      pdf.text(practicante.nombre_completo, 14, 28)
+      pdf.setTextColor(80, 80, 80)
+      pdf.text(practicante.nombre_completo, 14, 26)
+      pdf.text(
+        `Generado: ${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}`,
+        196, 26, { align: 'right' }
+      )
 
-      pdf.setTextColor(100, 116, 139)    // slate-500
+      // ── Resumen rápido ──
       pdf.setFontSize(9)
-      pdf.text(`Generado el ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`, 14, 37)
-      pdf.text(`Total acumulado: ${formatHoras(practicante.total_horas_acumuladas || 0)}`, 140, 37)
+      pdf.setTextColor(100, 100, 100)
+      pdf.text(`Total días: ${registros.length}   |   Días completos: ${registros.filter(r => r.estado === 'COMPLETO').length}   |   Total acumulado: ${formatHoras(practicante.total_horas_acumuladas || 0)}`, 14, 34)
 
-      // ── Tabla de registros ──
-      const filas = registros.map((r) => [
-        formatFecha(r.fecha),
-        r.hora_entrada || '–',
-        r.hora_salida || '–',
-        r.total_dia_horas ? formatHoras(r.total_dia_horas) : '–',
-        r.estado === 'COMPLETO' ? 'Completo' : 'Incompleto',
-        r.nota_admin || '',
-      ])
+      // ── Tabla de resumen semanal ──
+      pdf.setFontSize(9)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setTextColor(30, 30, 30)
+      pdf.text('RESUMEN SEMANAL', 14, 44)
 
       autoTable(pdf, {
-        startY: 52,
-        head: [['Fecha', 'Entrada', 'Salida', 'Total', 'Estado', 'Nota Admin']],
-        body: filas,
-        theme: 'grid',
+        startY: 47,
+        head: [['Semana', 'Días trabajados', 'Horas semanales', 'Acumulado hasta semana']],
+        body: semanas.map((s, i) => {
+          const acum = semanas.slice(0, i + 1).reduce((a, x) => a + x.totalHoras, 0)
+          const diasCompletos = s.registros.filter(r => r.estado === 'COMPLETO').length
+          return [
+            s.clave.replace('-S', ' · Semana '),
+            `${diasCompletos} día${diasCompletos !== 1 ? 's' : ''}`,
+            formatHoras(s.totalHoras),
+            formatHoras(acum),
+          ]
+        }),
+        theme: 'plain',
         headStyles: {
-          fillColor: [30, 41, 59],     // slate-800
-          textColor: [148, 163, 184],  // slate-400
+          textColor: [80, 80, 80],
           fontStyle: 'bold',
           fontSize: 8,
+          lineWidth: { bottom: 0.3 },
+          lineColor: [200, 200, 200],
         },
         bodyStyles: {
           fontSize: 8,
-          textColor: [51, 65, 85],     // slate-700
+          textColor: [50, 50, 50],
+          lineWidth: { bottom: 0.1 },
+          lineColor: [220, 220, 220],
         },
-        alternateRowStyles: {
-          fillColor: [248, 250, 252],  // slate-50
+        alternateRowStyles: { fillColor: [250, 250, 250] },
+        columnStyles: {
+          0: { cellWidth: 45 },
+          1: { cellWidth: 35, halign: 'center' },
+          2: { cellWidth: 35, halign: 'center', fontStyle: 'bold' },
+          3: { cellWidth: 45, halign: 'right' },
         },
+        margin: { left: 14, right: 14 },
+      })
+
+      // ── Tabla de detalle diario ──
+      const y2 = pdf.lastAutoTable.finalY + 8
+      pdf.setFontSize(9)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setTextColor(30, 30, 30)
+      pdf.text('DETALLE DIARIO', 14, y2)
+
+      autoTable(pdf, {
+        startY: y2 + 3,
+        head: [['Fecha', 'Entrada', 'Salida', 'Horas', 'Estado', 'Nota']],
+        body: registros.map((r) => [
+          formatFecha(r.fecha),
+          r.hora_entrada ? r.hora_entrada.slice(0, 5) : '–',
+          r.hora_salida  ? r.hora_salida.slice(0, 5)  : '–',
+          r.total_dia_horas ? formatHoras(r.total_dia_horas) : '–',
+          r.estado === 'COMPLETO' ? '✓' : '⚠',
+          r.nota_admin || '',
+        ]),
+        theme: 'plain',
+        headStyles: {
+          textColor: [80, 80, 80],
+          fontStyle: 'bold',
+          fontSize: 7.5,
+          lineWidth: { bottom: 0.3 },
+          lineColor: [200, 200, 200],
+        },
+        bodyStyles: {
+          fontSize: 7.5,
+          textColor: [50, 50, 50],
+          lineWidth: { bottom: 0.1 },
+          lineColor: [230, 230, 230],
+        },
+        alternateRowStyles: { fillColor: [250, 250, 250] },
         columnStyles: {
           0: { cellWidth: 26 },
-          1: { cellWidth: 20 },
-          2: { cellWidth: 20 },
-          3: { cellWidth: 20 },
-          4: { cellWidth: 24 },
+          1: { cellWidth: 18, halign: 'center' },
+          2: { cellWidth: 18, halign: 'center' },
+          3: { cellWidth: 20, halign: 'center', fontStyle: 'bold' },
+          4: { cellWidth: 12, halign: 'center' },
           5: { cellWidth: 'auto' },
         },
         didParseCell: (data) => {
-          // Filas incompletas en color amber
-          if (data.section === 'body' && data.row.raw[4] === 'Incompleto') {
-            data.cell.styles.textColor = [180, 120, 0]
+          if (data.section === 'body' && data.row.raw[4] === '⚠') {
+            data.cell.styles.textColor = [180, 100, 0]
           }
         },
         margin: { left: 14, right: 14 },
       })
 
-      // ── Resumen final ──
-      const finalY = pdf.lastAutoTable.finalY + 8
-      pdf.setFontSize(9)
-      pdf.setTextColor(100, 116, 139)
-      pdf.text(`Total de días registrados: ${registros.length}`, 14, finalY)
-      pdf.text(`Días completos: ${registros.filter((r) => r.estado === 'COMPLETO').length}`, 14, finalY + 6)
-      pdf.text(`Días con incidencia: ${registros.filter((r) => r.estado === 'INCOMPLETO').length}`, 14, finalY + 12)
-
+      // ── Total final destacado ──
+      const finalY = pdf.lastAutoTable.finalY + 6
+      pdf.setDrawColor(16, 185, 129)
+      pdf.setLineWidth(0.4)
+      pdf.line(14, finalY, 196, finalY)
       pdf.setFontSize(10)
-      pdf.setTextColor(16, 185, 129)
       pdf.setFont('helvetica', 'bold')
-      pdf.text(`TOTAL HORAS: ${formatHoras(practicante.total_horas_acumuladas || 0)}`, 140, finalY + 6)
+      pdf.setTextColor(16, 130, 80)
+      pdf.text(`TOTAL ACUMULADO: ${formatHoras(practicante.total_horas_acumuladas || 0)}`, 196, finalY + 6, { align: 'right' })
 
       // ── Pie de página ──
       const pageCount = pdf.getNumberOfPages()
@@ -856,9 +935,10 @@ function SeccionReportes({ practicantes }) {
         pdf.setPage(i)
         pdf.setFontSize(7)
         pdf.setFont('helvetica', 'normal')
-        pdf.setTextColor(148, 163, 184)
-        pdf.text(`Página ${i} de ${pageCount}`, 196, 290, { align: 'right' })
-        pdf.text('Sistema de Control de Horas · Practicantes', 14, 290)
+        pdf.setTextColor(180, 180, 180)
+        pdf.line(14, 287, 196, 287)
+        pdf.text(`Página ${i} de ${pageCount}`, 196, 292, { align: 'right' })
+        pdf.text('Sistema de Control de Horas · Practicantes', 14, 292)
       }
 
       const nombreArchivo = practicante.nombre_completo.replace(/\s+/g, '_').toLowerCase()
@@ -871,51 +951,134 @@ function SeccionReportes({ practicantes }) {
   }
 
   return (
-    <div className="card p-6">
-      <h2 className="text-base font-bold text-slate-100 mb-1 flex items-center gap-2">
-        <svg className="h-5 w-5 text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-        </svg>
-        Reportes PDF
-      </h2>
-      <p className="text-xs text-slate-500 mb-5">Genera y descarga el reporte individual de cada practicante con desglose completo de días y horas.</p>
+    <div className="space-y-4">
+      {/* ── Tabla de horas semanales ── */}
+      <div className="card p-6">
+        <h2 className="text-base font-bold text-slate-100 mb-1 flex items-center gap-2">
+          <svg className="h-5 w-5 text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+          </svg>
+          Horas semanales
+        </h2>
+        <p className="text-xs text-slate-500 mb-4">Selecciona un practicante para ver el desglose por semana.</p>
 
-      {practicantes.length === 0 ? (
-        <p className="text-sm text-slate-500 text-center py-4">No hay practicantes registrados.</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {practicantes.map((p) => (
-            <div key={p.id} className="flex items-center gap-3 rounded-xl bg-slate-900/50 border border-slate-700/40 px-4 py-3">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-200 truncate">{p.nombre_completo}</p>
-                <p className="text-xs text-slate-500">{formatHoras(p.total_horas_acumuladas || 0)}</p>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Lista de practicantes */}
+          <div className="space-y-2">
+            {practicantes.map((p) => (
               <button
-                onClick={() => generarPDF(p)}
-                disabled={generando === p.id}
-                className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold
-                  bg-rose-500/15 text-rose-400 border border-rose-500/25
-                  hover:bg-rose-500/25 transition-colors duration-200
-                  disabled:opacity-50 disabled:cursor-not-allowed"
+                key={p.id}
+                onClick={() => verSemanas(p)}
+                className={`w-full text-left rounded-xl px-4 py-3 border transition-all duration-200
+                  ${vistaSemanaPract === p.id
+                    ? 'bg-slate-700/80 border-slate-500/50 ring-1 ring-emerald-500/30'
+                    : 'bg-slate-900/50 border-slate-700/40 hover:border-slate-600/60 hover:bg-slate-800/60'
+                  }`}
               >
-                {generando === p.id ? (
-                  <>
-                    <span className="h-3 w-3 rounded-full border border-rose-400 border-t-transparent animate-spin" />
-                    Generando…
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                    </svg>
-                    Descargar PDF
-                  </>
-                )}
+                <p className="text-sm font-medium text-slate-200">{p.nombre_completo}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{formatHoras(p.total_horas_acumuladas || 0)} acumuladas</p>
               </button>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          {/* Tabla semanal */}
+          <div>
+            {!vistaSemanaPract && (
+              <div className="flex h-full min-h-[100px] items-center justify-center rounded-xl border border-dashed border-slate-700/50 text-slate-600 text-sm">
+                Selecciona un practicante
+              </div>
+            )}
+            {cargandoSemana && (
+              <div className="flex justify-center py-8">
+                <div className="h-6 w-6 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+              </div>
+            )}
+            {vistaSemanaPract && !cargandoSemana && registrosSemana.length > 0 && (() => {
+              const semanas = agruparPorSemana(registrosSemana)
+              let acum = 0
+              return (
+                <div className="overflow-hidden rounded-xl border border-slate-700/40">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-slate-800/80">
+                        <th className="text-left px-3 py-2 text-slate-400 font-semibold">Semana</th>
+                        <th className="text-center px-3 py-2 text-slate-400 font-semibold">Días</th>
+                        <th className="text-right px-3 py-2 text-emerald-400 font-semibold">Horas</th>
+                        <th className="text-right px-3 py-2 text-slate-400 font-semibold">Acumulado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {semanas.map((s, i) => {
+                        acum += s.totalHoras
+                        const dias = s.registros.filter(r => r.estado === 'COMPLETO').length
+                        return (
+                          <tr key={s.clave} className={i % 2 === 0 ? 'bg-slate-900/30' : 'bg-slate-800/20'}>
+                            <td className="px-3 py-2 text-slate-300">{s.clave.replace('-S', ' · Sem ')}</td>
+                            <td className="px-3 py-2 text-center text-slate-400">{dias}d</td>
+                            <td className="px-3 py-2 text-right font-bold text-emerald-400">{formatHoras(s.totalHoras)}</td>
+                            <td className="px-3 py-2 text-right text-slate-400">{formatHoras(acum)}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t border-slate-700/50 bg-slate-800/60">
+                        <td colSpan={2} className="px-3 py-2 text-slate-400 font-semibold text-xs">Total</td>
+                        <td colSpan={2} className="px-3 py-2 text-right font-bold text-slate-100">
+                          {formatHoras(registrosSemana.reduce((a, r) => a + (r.total_dia_horas || 0), 0))}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )
+            })()}
+            {vistaSemanaPract && !cargandoSemana && registrosSemana.length === 0 && (
+              <p className="text-sm text-slate-500 text-center py-6">Sin registros aún.</p>
+            )}
+          </div>
         </div>
-      )}
+      </div>
+
+      {/* ── Descarga de PDFs ── */}
+      <div className="card p-6">
+        <h2 className="text-base font-bold text-slate-100 mb-1 flex items-center gap-2">
+          <svg className="h-5 w-5 text-rose-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+          </svg>
+          Reportes PDF
+        </h2>
+        <p className="text-xs text-slate-500 mb-4">Desglose completo con resumen semanal y detalle diario.</p>
+
+        {practicantes.length === 0 ? (
+          <p className="text-sm text-slate-500 text-center py-4">No hay practicantes registrados.</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {practicantes.map((p) => (
+              <div key={p.id} className="flex items-center gap-3 rounded-xl bg-slate-900/50 border border-slate-700/40 px-4 py-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-200 truncate">{p.nombre_completo}</p>
+                  <p className="text-xs text-slate-500">{formatHoras(p.total_horas_acumuladas || 0)}</p>
+                </div>
+                <button
+                  onClick={() => generarPDF(p)}
+                  disabled={generando === p.id}
+                  className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold
+                    bg-rose-500/15 text-rose-400 border border-rose-500/25
+                    hover:bg-rose-500/25 transition-colors duration-200
+                    disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {generando === p.id ? (
+                    <><span className="h-3 w-3 rounded-full border border-rose-400 border-t-transparent animate-spin" />Generando…</>
+                  ) : (
+                    <><svg className="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>PDF</>
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
