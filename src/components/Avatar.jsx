@@ -307,41 +307,7 @@ const PERSONAJES = [
       </svg>
     ),
   },
-  // 9 — Dragón
-  {
-    nombre: 'Dragón',
-    bg: 'from-red-500 to-rose-700',
-    svg: (
-      <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Cuernos */}
-        <polygon points="28,36 24,16 34,34" fill="#dc2626" />
-        <polygon points="52,34 46,16 56,36" fill="#dc2626" />
-        <polygon points="29,34 26,22 33,34" fill="#fca5a5" />
-        <polygon points="51,34 47,22 54,34" fill="#fca5a5" />
-        {/* Cabeza */}
-        <ellipse cx="40" cy="48" rx="24" ry="22" fill="#ef4444" />
-        {/* Escamas frente */}
-        <ellipse cx="40" cy="32" rx="8" ry="5" fill="#dc2626" />
-        {/* Ojos */}
-        <ellipse cx="32" cy="44" rx="6" ry="6" fill="#fef08a" />
-        <ellipse cx="48" cy="44" rx="6" ry="6" fill="#fef08a" />
-        <ellipse cx="32" cy="44" rx="2.5" ry="5" fill="#1e1b4b" />
-        <ellipse cx="48" cy="44" rx="2.5" ry="5" fill="#1e1b4b" />
-        <circle cx="32" cy="42" r="1" fill="white" />
-        <circle cx="48" cy="42" r="1" fill="white" />
-        {/* Nariz */}
-        <ellipse cx="37" cy="54" rx="2" ry="1.5" fill="#7f1d1d" />
-        <ellipse cx="43" cy="54" rx="2" ry="1.5" fill="#7f1d1d" />
-        {/* Boca/colmillos */}
-        <path d="M33 58 Q40 64 47 58" stroke="#7f1d1d" strokeWidth="2" fill="none" strokeLinecap="round" />
-        <polygon points="36,58 34,63 38,63" fill="white" />
-        <polygon points="44,58 42,63 46,63" fill="white" />
-        {/* Mejillas */}
-        <ellipse cx="26" cy="52" rx="4" ry="2.5" fill="#fca5a5" opacity="0.5" />
-        <ellipse cx="54" cy="52" rx="4" ry="2.5" fill="#fca5a5" opacity="0.5" />
-      </svg>
-    ),
-  },
+  
   // 10 — Koala
   {
     nombre: 'Koala',
