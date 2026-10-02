@@ -199,31 +199,51 @@ const PERSONAJES = [
       </svg>
     ),
   },
-  // 6 — Rana
+  // 6 — Pantera
   {
-    nombre: 'Rana',
-    bg: 'from-green-400 to-emerald-600',
+    nombre: 'Pantera',
+    bg: 'from-slate-800 to-zinc-900',
     svg: (
       <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Ojos prominentes arriba */}
-        <circle cx="27" cy="32" r="10" fill="#4ade80" />
-        <circle cx="53" cy="32" r="10" fill="#4ade80" />
-        <circle cx="27" cy="32" r="7" fill="white" />
-        <circle cx="53" cy="32" r="7" fill="white" />
-        <circle cx="28" cy="33" r="4" fill="#14532d" />
-        <circle cx="54" cy="33" r="4" fill="#14532d" />
-        <circle cx="29" cy="32" r="1.5" fill="white" />
-        <circle cx="55" cy="32" r="1.5" fill="white" />
-        {/* Cabeza */}
-        <ellipse cx="40" cy="52" rx="26" ry="18" fill="#4ade80" />
-        {/* Boca grande */}
-        <path d="M24 54 Q40 68 56 54" stroke="#15803d" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        {/* Orejas puntiagudas */}
+        <polygon points="18,42 24,16 35,40" fill="#1c1917" />
+        <polygon points="45,40 56,16 62,42" fill="#1c1917" />
+        <polygon points="22,40 26,22 33,40" fill="#a855f7" opacity="0.4" />
+        <polygon points="47,40 54,22 58,40" fill="#a855f7" opacity="0.4" />
+        {/* Cabeza negra brillante */}
+        <ellipse cx="40" cy="48" rx="25" ry="23" fill="#18181b" />
+        {/* Reflejo sutil en la frente */}
+        <ellipse cx="36" cy="34" rx="8" ry="4" fill="#3f3f46" opacity="0.4" transform="rotate(-20,36,34)" />
+        {/* Hocico */}
+        <ellipse cx="40" cy="57" rx="12" ry="8" fill="#27272a" />
+        {/* Ojos — iris violeta brillante */}
+        <ellipse cx="32" cy="45" rx="6.5" ry="6.5" fill="#09090b" />
+        <ellipse cx="48" cy="45" rx="6.5" ry="6.5" fill="#09090b" />
+        <ellipse cx="32" cy="45" rx="5" ry="5" fill="#7c3aed" />
+        <ellipse cx="48" cy="45" rx="5" ry="5" fill="#7c3aed" />
+        {/* Pupila rasgada */}
+        <ellipse cx="32" cy="45" rx="2" ry="4.5" fill="#09090b" />
+        <ellipse cx="48" cy="45" rx="2" ry="4.5" fill="#09090b" />
+        {/* Brillo */}
+        <circle cx="30" cy="43" r="1.5" fill="white" opacity="0.9" />
+        <circle cx="46" cy="43" r="1.5" fill="white" opacity="0.9" />
+        <circle cx="34" cy="47" r="0.7" fill="white" opacity="0.5" />
+        <circle cx="50" cy="47" r="0.7" fill="white" opacity="0.5" />
         {/* Nariz */}
-        <ellipse cx="37" cy="47" rx="2" ry="1.5" fill="#15803d" />
-        <ellipse cx="43" cy="47" rx="2" ry="1.5" fill="#15803d" />
-        {/* Mejillas */}
-        <ellipse cx="26" cy="56" rx="5" ry="3" fill="#86efac" opacity="0.6" />
-        <ellipse cx="54" cy="56" rx="5" ry="3" fill="#86efac" opacity="0.6" />
+        <ellipse cx="40" cy="54" rx="3.5" ry="2.5" fill="#52525b" />
+        {/* Bigotes */}
+        <line x1="18" y1="56" x2="36" y2="57" stroke="#52525b" strokeWidth="1.2" />
+        <line x1="18" y1="60" x2="36" y2="59" stroke="#52525b" strokeWidth="1.2" />
+        <line x1="44" y1="57" x2="62" y2="56" stroke="#52525b" strokeWidth="1.2" />
+        <line x1="44" y1="59" x2="62" y2="60" stroke="#52525b" strokeWidth="1.2" />
+        {/* Boca */}
+        <path d="M37 58 Q40 62 43 58" stroke="#52525b" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+        {/* Manchas de jaguar sutiles */}
+        <ellipse cx="27" cy="50" rx="3.5" ry="2.5" fill="#27272a" opacity="0.8" />
+        <ellipse cx="53" cy="50" rx="3.5" ry="2.5" fill="#27272a" opacity="0.8" />
+        {/* Brillo violeta en mejillas */}
+        <ellipse cx="26" cy="53" rx="4" ry="2.5" fill="#7c3aed" opacity="0.15" />
+        <ellipse cx="54" cy="53" rx="4" ry="2.5" fill="#7c3aed" opacity="0.15" />
       </svg>
     ),
   },
