@@ -273,7 +273,7 @@ const PERSONAJES = [
       </svg>
     ),
   },
-  
+
   // 10 — Koala
   {
     nombre: 'Koala',
@@ -371,7 +371,7 @@ function getPersonaje(id) {
  *  - className: string
  */
 export default function Avatar({ id = '', index = null, size = 'md', className = '' }) {
-  const personaje = index !== null ? getPersonajePorIndice(index) : getPersonaje(id)
+  const personaje = id ? getPersonaje(id) : index !== null ? getPersonajePorIndice(index) : PERSONAJES[0]
 
   const sizes = {
     sm:  'h-10 w-10 rounded-xl',
