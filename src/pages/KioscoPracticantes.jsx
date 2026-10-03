@@ -14,7 +14,7 @@ import {
 import PinModal from '../components/PinModal'
 import Avatar from '../components/Avatar'
 
-// ─── Utilidades ────────────────────────────────────────────────────────────
+// ─── Utilidades ─────────────────────────────────────────────────────────
 function getFechaHoy() {
   const hoy = new Date()
   return `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`
@@ -61,10 +61,10 @@ function TarjetaPracticante({ practicante, index, estadoHoy, onClick }) {
            onMouseLeave={e => e.currentTarget.style.borderColor='rgba(255,255,255,0.06)'}
       >
         <div className="flex items-center gap-3">
-          {/* Avatar ilustrado — index evita duplicados entre los primeros 12 */}
+          {/* Avatar ilustrado — usa ID para consistencia */}
           <div className="relative group-hover:scale-105 transition-transform duration-200 animate-float"
                style={{ animationDelay: `${index * 0.15}s` }}>
-            <Avatar id={practicante.id} index={index} size="md" />
+            <Avatar id={practicante.id} size="md" />
             {/* Indicador activo */}
             {estadoHoy === 'entrada' && (
               <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full"
@@ -82,10 +82,10 @@ function TarjetaPracticante({ practicante, index, estadoHoy, onClick }) {
               {/* Candado */}
               {tienePIN
                 ? <svg className="h-3 w-3 flex-shrink-0 text-emerald-500/60" viewBox="0 0 24 24" fill="currentColor">
-                    <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clipRule="evenodd"/>
+                    <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3c0-2.071-1.679-3.75-3.75-3.75S8.25 4.429 8.25 6.5v3h7.5Z" />
                   </svg>
                 : <svg className="h-3 w-3 flex-shrink-0 text-amber-500/60" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M18 1.5c2.9 0 5.25 2.35 5.25 5.25v3.75a.75.75 0 0 1-1.5 0V6.75a3.75 3.75 0 1 0-7.5 0v3a3 3 0 0 1 3 3v6.75a3 3 0 0 1-3 3H3.75a3 3 0 0 1-3-3v-6.75a3 3 0 0 1 3-3h9v-3c0-2.9 2.35-5.25 5.25-5.25Z"/>
+                    <path d="M18 1.5c2.9 0 5.25 2.35 5.25 5.25v3.75a.75.75 0 0 1-1.5 0V6.75a3.75 3.75 0 1 0-7.5 0v3a3 3 0 0 1 3 3v6.75a3 3 0 0 1-3 3H3.75a3 3 0 0 1-3-3v-6.75a3 3 0 0 1 3-3h9v-3c0-2.9-2.35-5.25-5.25-5.25S8.25 3.6 8.25 6.5v.75a.75.75 0 0 1-1.5 0V6.5C6.75 3.175 9.175.75 12 .75s5.25 2.425 5.25 5.75v3h.75Z" />
                   </svg>
               }
             </div>
@@ -134,7 +134,7 @@ function TarjetaPracticante({ practicante, index, estadoHoy, onClick }) {
   )
 }
 
-// ─── Widget Ranking ────────────────────────────────────────────────────────
+// ─── Widget Ranking (Mejorado) ─────────────────────────────────────────────
 function RankingWidget({ practicantes }) {
   const ordenados = [...practicantes]
     .sort((a,b) => (b.total_horas_acumuladas||0) - (a.total_horas_acumuladas||0))
@@ -142,52 +142,110 @@ function RankingWidget({ practicantes }) {
   const medallas = ['🥇','🥈','🥉']
 
   return (
-    <div className="card p-5 animate-fade-in">
-      <h3 className="text-xs font-bold uppercase tracking-wider mb-4 flex items-center gap-2"
-          style={{color:'#6b7280'}}>
-        <svg className="h-4 w-4 text-amber-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-          <path fillRule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 0 0-.584.859 6.753 6.753 0 0 0 6.138 5.6 6.73 6.73 0 0 0 2.743 1.346A6.707 6.707 0 0 1 9.279 15H8.54c-1.036 0-1.875.84-1.875 1.875V19.5h-.75a2.25 2.25 0 0 0-2.25 2.25c0 .414.336.75.75.75h15a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-2.25-2.25h-.75v-2.625c0-1.036-.84-1.875-1.875-1.875h-.739a6.706 6.706 0 0 1-1.112-3.173 6.73 6.73 0 0 0 2.743-1.347 6.753 6.753 0 0 0 6.139-5.6.75.75 0 0 0-.585-.858 47.077 47.077 0 0 0-3.07-.543V2.62a.75.75 0 0 0-.658-.744 49.798 49.798 0 0 0-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 0 0-.657.744Zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 0 1 3.16 5.337a45.6 45.6 0 0 1 2.006-.343v.256Zm13.5 0v-.256c.674.1 1.343.214 2.006.343a5.265 5.265 0 0 1-2.863 3.207 6.72 6.72 0 0 0 .857-3.294Z" clipRule="evenodd"/>
+    <div className="card p-6 animate-fade-in">
+      {/* Encabezado del ranking */}
+      <h3 className="text-sm font-bold uppercase tracking-wider mb-6 flex items-center gap-2"
+          style={{color:'#9ca3af'}}>
+        <svg className="h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+          <path fillRule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 0 0-.584.859 6.753 6.753 0 0 0 6.138 5.6 6.73 6.73 0 0 0 2.743 1.346A6.707 6.707 0 0 1 9.279 15H8.54c-1.126 0-2.25.189-3.345.557a.75.75 0 0 0-.549.754v.718c0 .447.293.85.702 1.024.355.15.75.225 1.125.225H12a.75.75 0 0 0 .75-.75v-.357c0-.804.6-1.486 1.378-1.592a6.75 6.75 0 0 0 3.978-2.456 6.732 6.732 0 0 0 2.602-7.095.75.75 0 0 0-.583-.85c-1.012-.213-2.036-.395-3.071-.543v-.858a.75.75 0 0 0-.735-.735h-5.5a.75.75 0 0 0-.735.735zm4.084 6.667a.75.75 0 0 0 1.5 0 2.25 2.25 0 1 1 1.5 0 .75.75 0 0 0 1.5 0 3.75 3.75 0 1 0-4.5 0z" clipRule="evenodd" />
         </svg>
-        Ranking
+        Top 5 - Ranking
       </h3>
-      <div className="space-y-3">
-        {ordenados.slice(0,5).map((p,i) => (
-          <div key={p.id} className="flex items-center gap-2.5">
-            <span className="text-base w-5 flex-shrink-0 text-center">
-              {medallas[i] ?? <span className="text-xs font-bold text-slate-600">{i+1}</span>}
-            </span>
-            <Avatar id={p.id} size="sm" />
-            <div className="flex-1 min-w-0">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-slate-300 truncate font-medium">
-                  {p.nombre_completo.split(' ')[0]}
-                </span>
-                <span className="text-[11px] ml-1 flex-shrink-0" style={{color:'#2dd4bf'}}>
-                  {formatHoras(p.total_horas_acumuladas||0)}
-                </span>
+
+      <div className="space-y-4">
+        {ordenados.slice(0,5).map((p, i) => {
+          const posicion = i + 1
+          const esTop3 = i < 3
+          
+          return (
+            <div 
+              key={p.id} 
+              className={`flex items-center gap-3 p-3 rounded-2xl transition-all duration-300
+                ${esTop3 
+                  ? 'bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 shadow-lg' 
+                  : 'bg-slate-800/40 border border-slate-700/30 hover:border-slate-600/50'
+                }`}
+            >
+              {/* Posición con medalla o número */}
+              <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-xl"
+                   style={{
+                     background: esTop3 
+                       ? ['linear-gradient(135deg, #fbbf24, #f59e0b)', 'linear-gradient(135deg, #a3a3a3, #727272)', 'linear-gradient(135deg, #b45309, #92400e)'][i]
+                       : 'rgba(107, 114, 128, 0.1)',
+                   }}>
+                <span className="text-lg font-black">{medallas[i] || posicion}</span>
               </div>
-              <div className="h-1 rounded-full overflow-hidden" style={{background:'rgba(109,40,217,0.15)'}}>
-                <div className="h-full rounded-full transition-all duration-700"
-                  style={{
-                    width: `${ordenados[0].total_horas_acumuladas > 0
-                      ? ((p.total_horas_acumuladas||0)/ordenados[0].total_horas_acumuladas)*100 : 0}%`,
-                    background: i===0
-                      ? 'linear-gradient(90deg,#f59e0b,#fbbf24)'
-                      : i===1 ? 'linear-gradient(90deg,#6b7280,#9ca3af)'
-                      : i===2 ? 'linear-gradient(90deg,#92400e,#b45309)'
-                      : 'linear-gradient(90deg,#0d9488,#06b6d4)',
-                  }}
-                />
+
+              {/* Avatar Premium */}
+              <div className="flex-shrink-0 relative">
+                <Avatar id={p.id} size="sm" />
+                {/* Brillo sutil para top 3 */}
+                {esTop3 && (
+                  <div className="absolute inset-0 rounded-xl opacity-40"
+                       style={{
+                         boxShadow: `0 0 16px ${['rgba(251, 191, 36, 0.6)', 'rgba(163, 163, 163, 0.5)', 'rgba(180, 83, 9, 0.5)'][i]}`
+                       }} />
+                )}
+              </div>
+
+              {/* Nombre y info */}
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-bold truncate ${esTop3 ? 'text-slate-100' : 'text-slate-300'}`}>
+                  {p.nombre_completo.split(' ')[0]}
+                </p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {formatHoras(p.total_horas_acumuladas || 0)}
+                </p>
+              </div>
+
+              {/* Horas destacadas */}
+              <div className="flex-shrink-0 text-right">
+                <div className={`text-sm font-bold tabular-nums ${
+                  esTop3 ? 'text-amber-400' : 'text-emerald-400'
+                }`}>
+                  {formatHoras(p.total_horas_acumuladas || 0)}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
+      </div>
+
+      {/* Barra de progreso visual */}
+      <div className="mt-6 pt-4 border-t border-slate-700/50">
+        <div className="grid grid-cols-5 gap-1.5">
+          {ordenados.slice(0, 5).map((p, i) => {
+            const max = ordenados[0].total_horas_acumuladas || 1
+            const porcentaje = ((p.total_horas_acumuladas || 0) / max) * 100
+            
+            return (
+              <div key={p.id} className="flex flex-col items-center gap-1">
+                <div className="w-full h-8 rounded-lg overflow-hidden" style={{background:'rgba(51, 65, 85, 0.5)'}}>
+                  <div
+                    className="h-full transition-all duration-500 rounded-lg"
+                    style={{
+                      width: `${porcentaje}%`,
+                      background: i === 0 
+                        ? 'linear-gradient(180deg, #fbbf24, #f59e0b)' 
+                        : i === 1 
+                        ? 'linear-gradient(180deg, #a3a3a3, #727272)' 
+                        : i === 2 
+                        ? 'linear-gradient(180deg, #b45309, #92400e)' 
+                        : 'linear-gradient(180deg, #06b6d4, #0d9488)'
+                    }}
+                  />
+                </div>
+                <span className="text-xs font-semibold text-slate-400">{i + 1}</span>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )
 }
 
-// ─── Stats del día ─────────────────────────────────────────────────────────
+// ─── Stats del día ────────────────────────────────────────────────────────
 function StatsHoy({ estadosHoy, total }) {
   const activos   = Object.values(estadosHoy).filter(e => e==='entrada').length
   const completos = Object.values(estadosHoy).filter(e => e==='completo').length
@@ -198,7 +256,7 @@ function StatsHoy({ estadosHoy, total }) {
       <h3 className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2"
           style={{color:'#6b7280'}}>
         <svg className="h-4 w-4 text-cyan-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"/>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75" />
         </svg>
         Hoy
       </h3>
