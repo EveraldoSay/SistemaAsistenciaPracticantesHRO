@@ -72,41 +72,7 @@ const PERSONAJES = [
     ),
   },
   // 2 — Gato
-  {
-    nombre: 'Gato',
-    bg: 'from-purple-500 to-violet-600',
-    svg: (
-      <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-        {/* Orejas puntiagudas */}
-        <polygon points="18,42 24,18 34,40" fill="#a855f7" />
-        <polygon points="46,40 56,18 62,42" fill="#a855f7" />
-        <polygon points="21,40 24,24 31,40" fill="#f3e8ff" />
-        <polygon points="49,40 56,24 59,40" fill="#f3e8ff" />
-        {/* Cabeza */}
-        <ellipse cx="40" cy="48" rx="24" ry="22" fill="#c084fc" />
-        {/* Ojos */}
-        <ellipse cx="32" cy="45" rx="6" ry="6" fill="white" />
-        <ellipse cx="48" cy="45" rx="6" ry="6" fill="white" />
-        {/* Pupilas rasgadas */}
-        <ellipse cx="32" cy="45" rx="2.5" ry="5" fill="#1e1b4b" />
-        <ellipse cx="48" cy="45" rx="2.5" ry="5" fill="#1e1b4b" />
-        <circle cx="32" cy="43" r="1" fill="white" />
-        <circle cx="48" cy="43" r="1" fill="white" />
-        {/* Nariz */}
-        <polygon points="40,53 37.5,57 42.5,57" fill="#ec4899" />
-        {/* Bigotes */}
-        <line x1="20" y1="55" x2="36" y2="57" stroke="#7e22ce" strokeWidth="1" opacity="0.7" />
-        <line x1="20" y1="59" x2="36" y2="59" stroke="#7e22ce" strokeWidth="1" opacity="0.7" />
-        <line x1="44" y1="57" x2="60" y2="55" stroke="#7e22ce" strokeWidth="1" opacity="0.7" />
-        <line x1="44" y1="59" x2="60" y2="59" stroke="#7e22ce" strokeWidth="1" opacity="0.7" />
-        {/* Boca */}
-        <path d="M37 58 Q40 62 43 58" stroke="#7e22ce" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-        {/* Mejillas */}
-        <ellipse cx="27" cy="53" rx="4" ry="2.5" fill="#f0abfc" opacity="0.5" />
-        <ellipse cx="53" cy="53" rx="4" ry="2.5" fill="#f0abfc" opacity="0.5" />
-      </svg>
-    ),
-  },
+
   // 3 — Pingüino
   {
     nombre: 'Pingüino',
